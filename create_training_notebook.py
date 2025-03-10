@@ -18,17 +18,19 @@ This notebook trains the LSTM model for Bitcoin futures prediction using Google 
 Make sure you have:
 - Your Hugging Face token ready
 - The order book data file (`futures_orderbook_data.csv`)
-- Access to your GitHub repository''')
+- Access to your Hugging Face Space (rizkisyaf/zdml)''')
 
 # Setup Environment
 setup_code = '''# Install required packages
-!pip install transformers huggingface_hub gradio torch pandas numpy scikit-learn matplotlib seaborn tqdm pywavelets tensorboard pytest jupyter
+!pip install -q transformers huggingface_hub gradio torch pandas numpy scikit-learn matplotlib seaborn tqdm pywavelets tensorboard pytest jupyter
 
-# Clone your repository (replace with your repo URL)
-!git clone https://github.com/your-username/DataResearch.git
-%cd DataResearch
+# Clone your repository
+!git clone https://github.com/rizkisyaf/zdml.git
+%cd DATARESEARCH
 
 # Import required libraries
+import os
+import sys
 import torch
 import pandas as pd
 import numpy as np
@@ -61,6 +63,7 @@ print("Please upload futures_orderbook_data.csv")
 uploaded = files.upload()
 
 # Save the uploaded file
+!mkdir -p data
 !mv futures_orderbook_data.csv data/futures_orderbook_data.csv
 
 # Load and preprocess data
@@ -75,7 +78,7 @@ features_df = preprocess_data(df, window_size=20)
 print(f"Preprocessed data shape: {features_df.shape}")
 
 # Display first few rows of key features
-key_features = ['mid_price', 'weighted_mid_price', 'spread', 'imbalance']
+key_features = ['mid_price', 'weighted_mid_price', 'spread', 'imbalance', 'liquidity_imbalance', 'price_range']
 print("\nFirst few rows of key features:")
 print(features_df[key_features].head())'''
 
@@ -105,7 +108,12 @@ print(f"y_train: {data['y_train'].shape}")
 print(f"X_val: {data['X_val'].shape}")
 print(f"y_val: {data['y_val'].shape}")
 print(f"X_test: {data['X_test'].shape}")
-print(f"y_test: {data['y_test'].shape}")'''
+print(f"y_test: {data['y_test'].shape}")
+
+# Print feature names
+print("\nFeatures used for training:")
+for i, feature in enumerate(data['feature_names']):
+    print(f"{i+1}. {feature}")'''
 
 data_prep_cell = nbf.v4.new_code_cell(data_prep_code)
 
@@ -123,19 +131,100 @@ login()'''
 hf_login_cell = nbf.v4.new_code_cell(hf_login_code)
 
 # Training code
-training_code = '''# Train and push model
-from train_on_colab import train_and_push
+training_code = '''# Import training modules
+from src.models.lstm_model import OrderBookLSTM, OrderBookConfig, HybridLoss
+from src.train import train_model
+from src.utils.push_to_hub import push_model_to_hub
 
-# Start training
-results = train_and_push()
+# Set training parameters
+training_params = {
+    'data_path': 'processed_data.pkl',
+    'model_save_dir': 'saved_models',
+    'batch_size': 512,
+    'epochs': 100,
+    'learning_rate': 1e-4,
+    'weight_decay': 1e-5,
+    'patience': 10,
+    'use_gpu': torch.cuda.is_available(),
+    'loss_type': 'hybrid',
+    'output_size': 3,  # Price, direction, volatility
+    'sequence_length': 100,
+    'prediction_horizon': 1
+}
+
+# Create model directory
+os.makedirs(training_params['model_save_dir'], exist_ok=True)
+
+# Train model
+print("Starting model training...")
+results = train_model(**training_params)
 
 print("\nTraining completed!")
 print(f"Model saved to: {results['model_path']}")
 print("\nTest metrics:")
 for k, v in results['test_metrics'].items():
-    print(f"{k}: {v:.4f}")'''
+    print(f"{k}: {v:.4f}")
+
+# Push model to Hugging Face Hub
+print("\nPushing model to Hugging Face Hub...")
+model_url = push_model_to_hub(
+    model_path=results['model_path'],
+    repo_name="zdml",
+    organization="rizkisyaf"
+)
+
+print(f"\nModel successfully pushed to {model_url}")
+print("You can now use the model in your Gradio app!")'''
 
 training_cell = nbf.v4.new_code_cell(training_code)
+
+# Add visualization markdown
+viz_md = nbf.v4.new_markdown_cell('''## Visualizations
+
+Let's visualize the model's predictions and performance.''')
+
+# Add visualization code
+viz_code = '''from src.visualization.visualize import (
+    plot_price_predictions,
+    plot_direction_accuracy,
+    plot_trading_performance,
+    plot_order_book_snapshot
+)
+
+# Load test predictions
+test_preds = results['test_predictions']
+test_targets = data['y_test']
+
+# Plot predictions
+plot_price_predictions(
+    test_targets,
+    test_preds,
+    title='Bitcoin Price Predictions (Test Set)'
+)
+
+# Plot direction accuracy
+plot_direction_accuracy(
+    test_targets,
+    test_preds,
+    title='Direction Prediction Accuracy'
+)
+
+# Plot trading performance
+plot_trading_performance(
+    results['test_returns'],
+    results['test_positions'],
+    data['test_prices'],
+    title='Trading Performance (Test Set)'
+)
+
+# Plot sample order book
+plot_order_book_snapshot(
+    df,
+    index=len(df)//2,  # Middle of the dataset
+    title='Sample Order Book Snapshot'
+)'''
+
+viz_cell = nbf.v4.new_code_cell(viz_code)
 
 # Add all cells to notebook
 nb.cells.extend([
@@ -147,7 +236,9 @@ nb.cells.extend([
     data_prep_cell,
     training_md,
     hf_login_cell,
-    training_cell
+    training_cell,
+    viz_md,
+    viz_cell
 ])
 
 # Create notebooks directory if it doesn't exist
