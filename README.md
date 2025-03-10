@@ -1,3 +1,16 @@
+---
+title: Zdml
+emoji: 🏆
+colorFrom: pink
+colorTo: purple
+sdk: gradio
+sdk_version: 5.20.1
+app_file: app.py
+pinned: false
+license: apache-2.0
+short_description: Bitcoin Futures Prediction System
+---
+
 # Bitcoin Futures Prediction
 
 This Space provides a web interface for predicting Bitcoin perpetual futures price movements using order book data. The model uses a sophisticated LSTM architecture with attention mechanisms to analyze market microstructure and predict:
@@ -33,5 +46,7 @@ An example order book data file is provided in the interface.
 ## Links
 
 - [Model Repository](https://huggingface.co/rizkisyaf/zdml)
-- [GitHub Repository](https://github.com/your-username/DataResearch)
-- [Documentation](https://github.com/your-username/DataResearch/blob/main/README.md) 
+- [GitHub Repository](https://github.com/rizkisyaf/DataResearch)
+- [Documentation](https://github.com/rizkisyaf/DataResearch/blob/main/README.md)
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
