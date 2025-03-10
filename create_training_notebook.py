@@ -24,9 +24,16 @@ Make sure you have:
 setup_code = '''# Install required packages
 !pip install -q transformers huggingface_hub gradio torch pandas numpy scikit-learn matplotlib seaborn tqdm pywavelets tensorboard pytest jupyter
 
-# Clone your repository
-!git clone https://github.com/rizkisyaf/zdml.git
-%cd DATARESEARCH
+# Clone or update repository
+import os
+if os.path.exists('zdml'):
+    # Update existing repository
+    %cd zdml
+    !git pull origin main
+else:
+    # Clone repository
+    !git clone https://github.com/rizkisyaf/zdml.git
+    %cd zdml
 
 # Import required libraries
 import os
@@ -47,7 +54,11 @@ logger = logging.getLogger(__name__)
 # Check GPU availability
 print(f"GPU available: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
-    print(f"GPU device: {torch.cuda.get_device_name(0)}")'''
+    print(f"GPU device: {torch.cuda.get_device_name(0)}")
+    
+# Add project root to Python path
+if not os.path.abspath('.') in sys.path:
+    sys.path.append(os.path.abspath('.'))'''
 
 setup_cell = nbf.v4.new_code_cell(setup_code)
 
