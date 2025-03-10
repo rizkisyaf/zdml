@@ -1,141 +1,37 @@
-# Bitcoin Perpetual Futures Prediction
+# Bitcoin Futures Prediction
 
-A deep learning system for predicting Bitcoin perpetual futures price movements using LSTM networks and order book data.
+This Space provides a web interface for predicting Bitcoin perpetual futures price movements using order book data. The model uses a sophisticated LSTM architecture with attention mechanisms to analyze market microstructure and predict:
 
-## Project Overview
-
-This project implements a sophisticated prediction system for Bitcoin perpetual futures using high-frequency order book data. The system leverages LSTM neural networks with attention mechanisms to capture temporal patterns and market microstructure effects.
-
-## Features
-
-- **Comprehensive Order Book Feature Engineering**: Extracts rich features from all 10 levels of L2 order book data
-- **Advanced LSTM Architecture**: Multi-layer LSTM with multi-head attention mechanisms and feature projection
-- **Financial-Specific Training**: Custom loss functions and evaluation metrics
-- **Market Microstructure Modeling**: Accounts for order flow imbalance and liquidity dynamics
-- **Deployment Optimizations**: Quantization and latency-aware design
-
-## Project Structure
-
-```
-├── notebooks/              # Jupyter notebooks for exploration and visualization
-├── src/                    # Source code
-│   ├── data/               # Data loading and preprocessing
-│   ├── models/             # Model architecture definitions
-│   ├── utils/              # Utility functions and feature engineering
-│   ├── visualization/      # Visualization utilities
-│   ├── train.py            # Training script
-│   └── predict.py          # Prediction script
-├── requirements.txt        # Python dependencies
-└── README.md               # Project documentation
-```
-
-## Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd bitcoin-futures-prediction
-
-# Install dependencies
-pip install -r requirements.txt
-```
+1. Price Movement
+2. Direction (Up/Down)
+3. Volatility
 
 ## Usage
 
-### Data Preprocessing
+1. Upload your order book data CSV file
+2. The model will process the data and provide predictions
+3. Results include predicted price movement, direction, and volatility
 
-To preprocess the order book data:
+## Model Architecture
 
-```bash
-python -m src.data.preprocessing --input futures_orderbook_data.csv --output processed_data.pkl --sequence_length 100 --prediction_horizon 1
-```
+- Multi-layer LSTM with attention mechanisms
+- Feature projection for dimensionality reduction
+- Hybrid loss function combining price, direction, and volatility predictions
+- Trained on high-frequency order book data
 
-### Model Training
+## Input Format
 
-To train the LSTM model:
+The CSV file should contain order book data with the following columns:
+- timestamp
+- bid_price1-10, bid_qty1-10
+- ask_price1-10, ask_qty1-10
 
-```bash
-python -m src.train --data processed_data.pkl --model_dir saved_models --epochs 100 --batch_size 512
-```
+## Example
 
-### Making Predictions
+An example order book data file is provided in the interface.
 
-To make predictions with a trained model:
+## Links
 
-```bash
-python -m src.predict --model saved_models/lstm_model_YYYYMMDD_HHMMSS.pth --data futures_orderbook_data.csv --output_dir prediction_results
-```
-
-### Running the Complete Pipeline
-
-To run the complete pipeline from data preprocessing to prediction:
-
-```bash
-./run_pipeline.py --data futures_orderbook_data.csv --output_dir pipeline_results --epochs 100
-```
-
-### Quick Example
-
-For a quick demonstration of the system:
-
-```bash
-./example.py
-```
-
-## Key Components
-
-### Enhanced Feature Engineering
-
-The system extracts a comprehensive set of features from all 10 levels of order book data:
-
-- **Basic Price Features**:
-  - Mid-price: `(best_bid + best_ask)/2`
-  - Weighted Mid-Price: `(Σ(bid_p*Q)/ΣQ + Σ(ask_p*Q)/ΣQ)/2` (using all 10 levels)
-  - Spread: `ask_price1 - bid_price1`
-  - Microprice: `(bid_price1*ask_qty1 + ask_price1*bid_qty1)/(bid_qty1 + ask_qty1)`
-  - Price Range: `ask_price10 - bid_price10`
-
-- **Order Book Imbalance Features**:
-  - Standard Imbalance: `(sum(bid_qty) - sum(ask_qty))/(sum(bid_qty) + sum(ask_qty))` (using all 10 levels)
-  - Liquidity Imbalance: Distance-weighted imbalance across all price levels
-
-- **Price Dynamics**:
-  - Price Differences: `(p_t - p_{t-1})/p_{t-1}`
-  - Log Returns: `log(p_t) - log(p_{t-1})`
-  - Rolling Volatility: Standard deviation of returns over a window
-
-- **Volume and Depth Features**:
-  - Volume Acceleration: `(qty_t - qty_{t-5})/5`
-  - Cumulative Depth: Total quantity at each price level (all 10 levels)
-  - Bid/Ask Slope: Linear regression slope of price curve across all levels
-
-### Advanced LSTM Architecture
-
-The LSTM model architecture includes:
-
-- **Feature Projection Layer**: Reduces dimensionality of large feature sets
-- **Multi-layer LSTM**: 3 layers with dropout for regularization
-- **Multi-head Attention**: 8 attention heads to capture complex dependencies
-- **Layer Normalization**: Stabilizes training with deep networks
-- **Custom Loss Functions**: Hybrid loss for financial data with fat tails
-
-### Evaluation Metrics
-
-The system evaluates model performance using:
-
-- **Price prediction accuracy**: MAE, RMSE
-- **Directional prediction accuracy**: Accuracy, Precision, Recall, F1
-- **Trading performance**: Sharpe Ratio, Maximum Drawdown, Calmar Ratio, Sortino Ratio
-- **Profitability metrics**: Win Rate, Profit Factor
-
-## Jupyter Notebook
-
-For an interactive demonstration of the system, see the Jupyter notebook:
-
-```bash
-jupyter notebook notebooks/bitcoin_futures_prediction.ipynb
-```
-
-## License
-
-MIT
+- [Model Repository](https://huggingface.co/rizkisyaf/zdml)
+- [GitHub Repository](https://github.com/your-username/DataResearch)
+- [Documentation](https://github.com/your-username/DataResearch/blob/main/README.md) 
